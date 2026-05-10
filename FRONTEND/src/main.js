@@ -1,7 +1,7 @@
 import './style.css'
 
 // Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9095/api/atm';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:21279/api/atm';
 
 // State management
 let state = {
@@ -24,18 +24,18 @@ const elements = {
   pin: document.getElementById('pin'),
   loginBtn: document.getElementById('login-btn'),
   loginStatus: document.getElementById('login-status'),
-  
+
   otpCode: document.getElementById('otp-code'),
   verifyBtn: document.getElementById('verify-btn'),
   otpStatus: document.getElementById('otp-status'),
-  
+
   userDisplay: document.getElementById('user-display'),
   balanceDisplay: document.getElementById('balance-display'),
   logoutBtn: document.getElementById('logout-btn'),
-  
+
   showDeposit: document.getElementById('show-deposit'),
   showWithdraw: document.getElementById('show-withdraw'),
-  
+
   modalTitle: document.getElementById('modal-title'),
   amountInput: document.getElementById('amount'),
   processBtn: document.getElementById('process-btn'),
@@ -104,7 +104,7 @@ async function handleLogin() {
       const data = await response.json();
       state.accountNumber = accountNumber;
       state.user = data.user;
-      
+
       // Initiate OTP after successful login
       await sendOTP();
       showSection('otp');
@@ -146,6 +146,7 @@ async function handleRegister() {
       showStatus(elements.registerStatus, result, true);
     }
   } catch (err) {
+    console.error('Registration error:', err);
     showStatus(elements.registerStatus, 'Backend connection failed', true);
   } finally {
     setLoading(elements.registerBtn, false);
@@ -195,7 +196,7 @@ async function fetchBalance() {
     const response = await fetch(`${API_BASE_URL}/balance?accountNumber=${state.accountNumber}`);
     if (response.ok) {
       const data = await response.json();
-      elements.balanceDisplay.innerText = `$${parseFloat(data.balance).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+      elements.balanceDisplay.innerText = `$${parseFloat(data.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
       elements.userDisplay.innerText = `Account: ${data.accountNumber}`;
     }
   } catch (err) {
