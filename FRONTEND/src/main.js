@@ -1,7 +1,7 @@
 import './style.css'
 
 // Configuration
-const API_BASE_URL = 'http://localhost:9095/api/atm';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9095/api/atm';
 
 // State management
 let state = {
