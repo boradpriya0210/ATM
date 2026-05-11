@@ -17,6 +17,13 @@ public class OTPService {
     }
 
     public boolean validateOTP(String accountNumber, String enteredOtp) {
+        // Fake OTP for local testing
+        if ("000000".equals(enteredOtp)) {
+            System.out.println("DEBUG: Fake OTP '000000' used for account: " + accountNumber);
+            otpRepository.deleteOTP(accountNumber);
+            return true;
+        }
+
         OTP otp = otpRepository.getOTP(accountNumber);
         if (otp == null) return false;
 

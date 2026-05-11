@@ -24,11 +24,9 @@ const elements = {
   accNumber: document.getElementById('acc-number'),
   pin: document.getElementById('pin'),
   loginBtn: document.getElementById('login-btn'),
-  loginStatus: document.getElementById('login-status'),
-
+  
   otpCode: document.getElementById('otp-code'),
   verifyBtn: document.getElementById('verify-btn'),
-  otpStatus: document.getElementById('otp-status'),
 
   userDisplay: document.getElementById('user-display'),
   balanceDisplay: document.getElementById('balance-display'),
@@ -40,7 +38,7 @@ const elements = {
   modalTitle: document.getElementById('modal-title'),
   amountInput: document.getElementById('amount'),
   processBtn: document.getElementById('process-btn'),
-  modalStatus: document.getElementById('modal-status'),
+  
   backToDash: document.getElementById('back-to-dash'),
   backToLogin: document.getElementById('back-to-login'),
 
@@ -52,10 +50,27 @@ const elements = {
   regAcc: document.getElementById('reg-acc'),
   regPin: document.getElementById('reg-pin'),
   registerBtn: document.getElementById('register-btn'),
-  registerStatus: document.getElementById('register-status'),
   showRegister: document.getElementById('show-register'),
   showLogin: document.getElementById('show-login')
 };
+
+// Toast System
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = type === 'success' ? '✅' : '❌';
+  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
+}
 
 // Helper: Show specific section
 function showSection(sectionName) {
@@ -63,23 +78,15 @@ function showSection(sectionName) {
   sections[sectionName].classList.remove('hidden');
 }
 
-// Helper: Show status message
-function showStatus(el, message, isError = false) {
-  el.innerHTML = `<div class="status-msg ${isError ? 'status-error' : 'status-success'}">${message}</div>`;
-  if (!isError) {
-    setTimeout(() => { el.innerHTML = ''; }, 5000);
-  }
-}
-
 // Helper: Loading state
 function setLoading(btn, isLoading) {
   if (isLoading) {
     btn.disabled = true;
-    btn.dataset.originalText = btn.innerText;
+    btn.dataset.originalText = btn.innerHTML;
     btn.innerHTML = `<span class="loader"></span> Processing...`;
   } else {
     btn.disabled = false;
-    btn.innerText = btn.dataset.originalText;
+    btn.innerHTML = btn.dataset.originalText || 'Confirm';
   }
 }
 
@@ -89,7 +96,7 @@ async function handleLogin() {
   const pin = elements.pin.value;
 
   if (!accountNumber || !pin) {
-    showStatus(elements.loginStatus, 'Please fill all fields', true);
+    showToast('Please fill all fields', 'error');
     return;
   }
 
@@ -106,15 +113,15 @@ async function handleLogin() {
       state.accountNumber = accountNumber;
       state.user = data.user;
 
-      // Initiate OTP after successful login
+      showToast('Login successful! Sending OTP...');
       await sendOTP();
       showSection('otp');
     } else {
       const error = await response.text();
-      showStatus(elements.loginStatus, error || 'Invalid credentials', true);
+      showToast(error || 'Invalid credentials', 'error');
     }
   } catch (err) {
-    showStatus(elements.loginStatus, 'Backend connection failed', true);
+    showToast('Backend connection failed. Please check if the server is running.', 'error');
   } finally {
     setLoading(elements.loginBtn, false);
   }
@@ -127,7 +134,7 @@ async function handleRegister() {
   const pin = elements.regPin.value;
 
   if (!userName || !email || !accountNumber || !pin) {
-    showStatus(elements.registerStatus, 'Please fill all fields', true);
+    showToast('Please fill all fields', 'error');
     return;
   }
 
@@ -141,14 +148,13 @@ async function handleRegister() {
 
     const result = await response.text();
     if (response.ok) {
-      showStatus(elements.registerStatus, result);
-      setTimeout(() => showSection('login'), 2000);
+      showToast('Registration successful! You can now login.');
+      setTimeout(() => showSection('login'), 1500);
     } else {
-      showStatus(elements.registerStatus, result, true);
+      showToast(result || 'Registration failed', 'error');
     }
   } catch (err) {
-    console.error('Registration error:', err);
-    showStatus(elements.registerStatus, 'Backend connection failed', true);
+    showToast('Backend connection failed', 'error');
   } finally {
     setLoading(elements.registerBtn, false);
   }
@@ -179,14 +185,15 @@ async function handleVerifyOTP() {
     });
 
     if (response.ok) {
+      showToast('Identity verified successfully!');
       await fetchBalance();
       await fetchTransactions();
       showSection('dashboard');
     } else {
-      showStatus(elements.otpStatus, 'Invalid or expired OTP', true);
+      showToast('Invalid or expired OTP', 'error');
     }
   } catch (err) {
-    showStatus(elements.otpStatus, 'Verification failed', true);
+    showToast('Verification failed', 'error');
   } finally {
     setLoading(elements.verifyBtn, false);
   }
@@ -235,7 +242,7 @@ async function fetchTransactions() {
 async function handleTransaction() {
   const amount = parseFloat(elements.amountInput.value);
   if (isNaN(amount) || amount <= 0) {
-    showStatus(elements.modalStatus, 'Enter a valid amount', true);
+    showToast('Enter a valid amount', 'error');
     return;
   }
 
@@ -251,15 +258,15 @@ async function handleTransaction() {
 
     const result = await response.text();
     if (response.ok) {
-      showStatus(elements.modalStatus, result);
+      showToast(result);
       await fetchBalance();
       await fetchTransactions();
-      setTimeout(() => showSection('dashboard'), 2000);
+      setTimeout(() => showSection('dashboard'), 1500);
     } else {
-      showStatus(elements.modalStatus, result, true);
+      showToast(result, 'error');
     }
   } catch (err) {
-    showStatus(elements.modalStatus, 'Transaction failed', true);
+    showToast('Transaction failed', 'error');
   } finally {
     setLoading(elements.processBtn, false);
   }
@@ -298,6 +305,7 @@ elements.logoutBtn.addEventListener('click', () => {
   elements.accNumber.value = '';
   elements.pin.value = '';
   showSection('login');
+  showToast('Logged out safely');
 });
 
 // Allow Enter key to submit

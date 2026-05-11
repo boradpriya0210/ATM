@@ -46,7 +46,12 @@ public class ATMController {
         if (authService.register(accountNumber, userName, email, pin)) {
             return ResponseEntity.ok("Registration successful. Please login.");
         } else {
-            return ResponseEntity.status(400).body("Account number already exists");
+            // Check if it's because it exists or because of a DB error
+            if (userRepository.existsByAccountNumber(accountNumber)) {
+                return ResponseEntity.status(400).body("Account number already exists");
+            } else {
+                return ResponseEntity.status(500).body("Registration failed: Database connection error");
+            }
         }
     }
 

@@ -7,13 +7,13 @@
     <title>Aura Bank - Secure ATM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="app">
       <!-- Login Section -->
       <div id="login-section" class="glass-card">
-        <h1>Aura Bank</h1>
+        <h1><span style="font-size: 1.5rem; vertical-align: middle; margin-right: 10px;">🏛️</span>Aura Bank</h1>
         <p class="subtitle">Secure Digital ATM Access</p>
         
         <div class="input-group">
@@ -79,7 +79,7 @@
       <!-- Dashboard Section -->
       <div id="dashboard-section" class="glass-card hidden">
         <div class="dashboard-header">
-          <h1>Welcome</h1>
+          <h1><span style="font-size: 1.5rem; vertical-align: middle; margin-right: 10px;">🏛️</span>Aura Bank</h1>
           <p id="user-display" class="subtitle">Account: 1234567890</p>
         </div>
 
@@ -125,6 +125,7 @@
         <a class="back-link" id="back-to-dash">Cancel</a>
       </div>
     </div>
+    <div id="toast-container"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
