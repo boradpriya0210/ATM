@@ -1,7 +1,7 @@
 import './style.css'
 
 // Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:21279/api/atm';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://atm-7pj3.onrender.com/api/atm';
 console.log('Using API Base URL:', API_BASE_URL);
 
 // State management
@@ -24,7 +24,7 @@ const elements = {
   accNumber: document.getElementById('acc-number'),
   pin: document.getElementById('pin'),
   loginBtn: document.getElementById('login-btn'),
-  
+
   otpCode: document.getElementById('otp-code'),
   verifyBtn: document.getElementById('verify-btn'),
 
@@ -38,7 +38,7 @@ const elements = {
   modalTitle: document.getElementById('modal-title'),
   amountInput: document.getElementById('amount'),
   processBtn: document.getElementById('process-btn'),
-  
+
   backToDash: document.getElementById('back-to-dash'),
   backToLogin: document.getElementById('back-to-login'),
 
@@ -59,12 +59,12 @@ function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  
+
   const icon = type === 'success' ? '✅' : '❌';
   toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
-  
+
   container.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(100%)';
