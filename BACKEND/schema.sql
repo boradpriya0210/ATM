@@ -22,7 +22,17 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (account_number) REFERENCES users(account_number) ON DELETE CASCADE
 );
 
+-- Table to store OTP verification codes
+CREATE TABLE IF NOT EXISTS otp_verification (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    account_number VARCHAR(20) NOT NULL,
+    otp_code VARCHAR(6) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_number) REFERENCES users(account_number) ON DELETE CASCADE
+);
+
 -- Sample Data for Testing (PIN is 1234)
 INSERT INTO users (account_number, user_name, email, pin, balance) 
 VALUES ('1234567890', 'John Doe', 'john@example.com', '$2a$10$jS6SufS6YfW7.p4F3S9LDe8.U5mK/5eP5G6p7/yv7p.hO0S2F8S/S', 5000.00)
 ON DUPLICATE KEY UPDATE pin='$2a$10$jS6SufS6YfW7.p4F3S9LDe8.U5mK/5eP5G6p7/yv7p.hO0S2F8S/S';
+
