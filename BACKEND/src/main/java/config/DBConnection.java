@@ -25,8 +25,15 @@ public class DBConnection {
                 USER = resolveProperty(props, "db.username", "root");
                 PASSWORD = resolveProperty(props, "db.password", "");
             }
+            
+            // Trim values to remove any accidental spaces from Render environment variables
+            if (URL != null) URL = URL.trim();
+            if (USER != null) USER = USER.trim();
+            if (PASSWORD != null) PASSWORD = PASSWORD.trim();
+
             System.out.println("DEBUG: Database URL Loaded -> " + URL);
             System.out.println("DEBUG: Database User Loaded -> " + USER);
+
         } catch (Exception ex) {
             System.err.println("Failed to load database configuration!");
             ex.printStackTrace();
