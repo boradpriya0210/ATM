@@ -2,6 +2,7 @@ import './style.css'
 
 // Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:21279/api/atm';
+console.log('Using API Base URL:', API_BASE_URL);
 
 // State management
 let state = {
