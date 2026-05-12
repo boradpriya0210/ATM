@@ -39,9 +39,13 @@ public class AuthService {
 
     public boolean initiateOTP(User user) {
         String otp = otpService.generateAndSaveOTP(user.getAccountNumber());
-        emailService.sendOTPEmail(user.getEmail(), otp);
+        // Run email sending in a background thread to avoid blocking the login response
+        new Thread(() -> {
+            emailService.sendOTPEmail(user.getEmail(), otp);
+        }).start();
         return true;
     }
+
 
     public boolean verifyOTP(String accountNumber, String otp) {
         return otpService.validateOTP(accountNumber, otp);
