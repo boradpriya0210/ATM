@@ -27,14 +27,26 @@ public class ATMController {
         
         User user = authService.login(accountNumber, pin);
         if (user != null) {
+            // Automatically send OTP upon successful credential verification
+            authService.initiateOTP(user);
+            
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Login successful");
-            response.put("user", user);
+            response.put("message", "Credentials verified. OTP sent to: " + maskEmail(user.getEmail()));
+            response.put("accountNumber", user.getAccountNumber());
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(401).body("Invalid credentials or account locked");
         }
     }
+
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return "****";
+        String[] parts = email.split("@");
+        String name = parts[0];
+        if (name.length() <= 2) return "****@" + parts[1];
+        return name.substring(0, 2) + "****@" + parts[1];
+    }
+
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> request) {

@@ -8,8 +8,8 @@ import javax.mail.Session;
 public class MailConfig {
     public static final String HOST = "smtp.gmail.com";
     public static final String PORT = "587";
-    public static final String FROM_EMAIL = System.getenv("MAIL_FROM") != null ? System.getenv("MAIL_FROM") : "your_email@gmail.com";
-    public static final String APP_PASSWORD = System.getenv("MAIL_PASSWORD") != null ? System.getenv("MAIL_PASSWORD") : "your_app_password";
+    public static final String FROM_EMAIL = "boradpriya0210@gmail.com";
+    public static final String APP_PASSWORD = "zoxo xzuw qplt qwwz";
 
     public static Session getSession() {
         Properties properties = new Properties();

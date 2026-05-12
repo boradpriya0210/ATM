@@ -111,10 +111,9 @@ async function handleLogin() {
     if (response.ok) {
       const data = await response.json();
       state.accountNumber = accountNumber;
-      state.user = data.user;
-
-      showToast('Login successful! Sending OTP...');
-      await sendOTP();
+      // Note: user object will be fetched AFTER OTP verification
+      
+      showToast(data.message || 'Credentials verified! Check your email for OTP.');
       showSection('otp');
     } else {
       const error = await response.text();
