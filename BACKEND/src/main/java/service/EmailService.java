@@ -19,11 +19,14 @@ public class EmailService {
             message.setSubject("ATM Login OTP");
             message.setText("Your ATM Login OTP is: " + otp + "\nThis OTP is valid for 2 minutes.");
 
+            System.out.println("DEBUG: Attempting to send OTP email to: " + toEmail);
             Transport.send(message);
-            System.out.println("OTP [" + otp + "] sent to email: " + toEmail);
+            System.out.println("✅ SUCCESS: OTP [" + otp + "] sent to email: " + toEmail);
         } catch (MessagingException e) {
+            System.out.println("❌ ERROR: Failed to send OTP email to " + toEmail);
+            System.out.println("Reason: " + e.getMessage());
             e.printStackTrace();
-            System.out.println("Failed to send OTP email.");
         }
+
     }
 }
