@@ -4,10 +4,15 @@ import model.User;
 import repository.UserRepository;
 import util.BCryptUtil;
 
+import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepository = new UserRepository();
-    private final EmailService emailService = new EmailService();
-    private final OTPService otpService = new OTPService();
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final OTPService otpService;
 
     public User login(String accountNumber, String pin) {
         User user = userRepository.findUserByAccountNumber(accountNumber);
@@ -39,9 +44,16 @@ public class AuthService {
 
     public boolean initiateOTP(User user) {
         String otp = otpService.generateAndSaveOTP(user.getAccountNumber());
-        // Run email sending in a background thread to avoid blocking the login response
+        System.out.println("DEBUG: Generated OTP [" + otp + "] for account: " + user.getAccountNumber());
+        
+        // Run email sending in a background thread
         new Thread(() -> {
-            emailService.sendOTPEmail(user.getEmail(), otp);
+            try {
+                emailService.sendOTPEmail(user.getEmail(), otp);
+            } catch (Exception e) {
+                System.err.println("CRITICAL ERROR: Failed to dispatch OTP email to " + user.getEmail());
+                e.printStackTrace();
+            }
         }).start();
         return true;
     }

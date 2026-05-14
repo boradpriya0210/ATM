@@ -73,6 +73,7 @@
         
         <button id="verify-btn">Verify & Continue</button>
         <div id="otp-status"></div>
+        <p class="auth-switch">Didn't get code? <a id="resend-otp">Resend OTP</a></p>
         <a class="back-link" id="back-to-login">Back to Login</a>
       </div>
 
@@ -97,6 +98,10 @@
             <span class="action-icon">💸</span>
             <span>Withdraw</span>
           </div>
+          <div class="action-btn" id="show-transfer">
+            <span class="action-icon">🔄</span>
+            <span>Transfer</span>
+          </div>
         </div>
 
         <div class="transactions-container">
@@ -115,6 +120,11 @@
         <h1 id="modal-title">Deposit</h1>
         <p class="subtitle">Enter the amount to process</p>
         
+        <div class="input-group hidden" id="recipient-group">
+          <label for="recipient-acc">Recipient Account Number</label>
+          <input type="text" id="recipient-acc" placeholder="1234567890" maxlength="10">
+        </div>
+
         <div class="input-group">
           <label for="amount">Amount ($)</label>
           <input type="number" id="amount" placeholder="0.00">

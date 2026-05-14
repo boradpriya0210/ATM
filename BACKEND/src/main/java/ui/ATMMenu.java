@@ -6,10 +6,15 @@ import service.ATMService;
 import service.TransactionService;
 import java.util.Scanner;
 
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
 public class ATMMenu {
-    private final AuthService authService = new AuthService();
-    private final ATMService atmService = new ATMService();
-    private final TransactionService transactionService = new TransactionService();
+    private final AuthService authService;
+    private final ATMService atmService;
+    private final TransactionService transactionService;
     private final Scanner scanner = new Scanner(System.in);
 
     public void showMainMenu() {

@@ -1,35 +1,36 @@
 package controller;
 
 import model.User;
+import dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import service.ATMService;
 import service.AuthService;
 import repository.UserRepository;
+import repository.TransactionRepository;
+import util.JwtUtil;
+import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/atm")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "https://aura-bank.onrender.com"})
+@RequiredArgsConstructor
 public class ATMController {
 
-    private final AuthService authService = new AuthService();
-    private final ATMService atmService = new ATMService();
-    private final UserRepository userRepository = new UserRepository();
-    private final repository.TransactionRepository transactionRepository = new repository.TransactionRepository();
+    private final AuthService authService;
+    private final ATMService atmService;
+    private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String accountNumber = request.get("accountNumber");
-        String pin = request.get("pin");
-        
-        User user = authService.login(accountNumber, pin);
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        User user = authService.login(request.getAccountNumber(), request.getPin());
         if (user != null) {
-            // Automatically send OTP upon successful credential verification
             authService.initiateOTP(user);
-            
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Credentials verified. OTP sent to: " + maskEmail(user.getEmail()));
             response.put("accountNumber", user.getAccountNumber());
@@ -47,30 +48,17 @@ public class ATMController {
         return name.substring(0, 2) + "****@" + parts[1];
     }
 
-
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> request) {
-        String accountNumber = request.get("accountNumber");
-        String userName = request.get("userName");
-        String email = request.get("email");
-        String pin = request.get("pin");
-
-        if (authService.register(accountNumber, userName, email, pin)) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        if (authService.register(request.getAccountNumber(), request.getUserName(), request.getEmail(), request.getPin())) {
             return ResponseEntity.ok("Registration successful. Please login.");
         } else {
-            // Check if it's because it exists or because of a DB error
-            if (userRepository.existsByAccountNumber(accountNumber)) {
+            if (userRepository.existsByAccountNumber(request.getAccountNumber())) {
                 return ResponseEntity.status(400).body("Account number already exists");
             } else {
                 return ResponseEntity.status(500).body("Registration failed: Database connection error");
             }
         }
-    }
-
-    @PostMapping("/reset")
-    public ResponseEntity<?> reset() {
-        authService.resetDatabase();
-        return ResponseEntity.ok("Database cleared successfully. Starting fresh!");
     }
 
     @PostMapping("/otp/send")
@@ -85,21 +73,40 @@ public class ATMController {
     }
 
     @PostMapping("/otp/verify")
-    public ResponseEntity<?> verifyOTP(@RequestBody Map<String, String> request) {
-        String accountNumber = request.get("accountNumber");
-        String otp = request.get("otp");
-        if (authService.verifyOTP(accountNumber, otp)) {
-            return ResponseEntity.ok("OTP Verified Successfully");
+    public ResponseEntity<?> verifyOTP(@RequestBody VerifyOtpRequest request) {
+        if (authService.verifyOTP(request.getAccountNumber(), request.getOtp())) {
+            String token = JwtUtil.generateToken(request.getAccountNumber());
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "OTP Verified Successfully");
+            response.put("token", token);
+            return ResponseEntity.ok(response);
         }
         return ResponseEntity.status(400).body("Invalid or Expired OTP");
     }
 
+    private String validateAndGetAccount(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.substring(7);
+        if (JwtUtil.validateToken(token)) {
+            return JwtUtil.extractAccountNumber(token);
+        }
+        return null;
+    }
+
     @GetMapping("/balance")
-    public ResponseEntity<?> getBalance(@RequestParam String accountNumber) {
+    public ResponseEntity<?> getBalance(@RequestParam String accountNumber, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String authenticatedAccount = validateAndGetAccount(authHeader);
+        if (authenticatedAccount == null || !authenticatedAccount.equals(accountNumber)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login and verify OTP.");
+        }
+
         User user = userRepository.findUserByAccountNumber(accountNumber);
         if (user != null) {
             Map<String, Object> response = new HashMap<>();
             response.put("accountNumber", user.getAccountNumber());
+            response.put("userName", user.getUserName());
             response.put("balance", user.getBalance());
             return ResponseEntity.ok(response);
         }
@@ -107,36 +114,68 @@ public class ATMController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<?> deposit(@RequestBody Map<String, Object> request) {
-        String accountNumber = (String) request.get("accountNumber");
-        double amount = Double.parseDouble(request.get("amount").toString());
-        
-        User user = userRepository.findUserByAccountNumber(accountNumber);
+    public ResponseEntity<?> deposit(@RequestBody TransactionRequest request, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String authenticatedAccount = validateAndGetAccount(authHeader);
+        if (authenticatedAccount == null || !authenticatedAccount.equals(request.getAccountNumber())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login and verify OTP.");
+        }
+
+        User user = userRepository.findUserByAccountNumber(request.getAccountNumber());
         if (user != null) {
-            atmService.deposit(user, amount);
-            return ResponseEntity.ok("Deposited: " + amount + ". New Balance: " + user.getBalance());
+            try {
+                String message = atmService.deposit(user, request.getAmount());
+                return ResponseEntity.ok(message);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(400).body(e.getMessage());
+            }
         }
         return ResponseEntity.status(404).body("User not found");
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<?> withdraw(@RequestBody Map<String, Object> request) {
-        String accountNumber = (String) request.get("accountNumber");
-        double amount = Double.parseDouble(request.get("amount").toString());
-        
-        User user = userRepository.findUserByAccountNumber(accountNumber);
+    public ResponseEntity<?> withdraw(@RequestBody TransactionRequest request, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String authenticatedAccount = validateAndGetAccount(authHeader);
+        if (authenticatedAccount == null || !authenticatedAccount.equals(request.getAccountNumber())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login and verify OTP.");
+        }
+
+        User user = userRepository.findUserByAccountNumber(request.getAccountNumber());
         if (user != null) {
-            if (user.getBalance() < amount) {
-                return ResponseEntity.status(400).body("Insufficient balance");
+            try {
+                String message = atmService.withdraw(user, request.getAmount());
+                return ResponseEntity.ok(message);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(400).body(e.getMessage());
             }
-            atmService.withdraw(user, amount);
-            return ResponseEntity.ok("Withdrawn: " + amount + ". New Balance: " + user.getBalance());
+        }
+        return ResponseEntity.status(404).body("User not found");
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody TransferRequest request, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String authenticatedAccount = validateAndGetAccount(authHeader);
+        if (authenticatedAccount == null || !authenticatedAccount.equals(request.getFromAccountNumber())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login and verify OTP.");
+        }
+
+        User fromUser = userRepository.findUserByAccountNumber(request.getFromAccountNumber());
+        if (fromUser != null) {
+            try {
+                String message = atmService.transfer(fromUser, request.getToAccountNumber(), request.getAmount());
+                return ResponseEntity.ok(message);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(400).body(e.getMessage());
+            }
         }
         return ResponseEntity.status(404).body("User not found");
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<?> getTransactions(@RequestParam String accountNumber) {
+    public ResponseEntity<?> getTransactions(@RequestParam String accountNumber, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String authenticatedAccount = validateAndGetAccount(authHeader);
+        if (authenticatedAccount == null || !authenticatedAccount.equals(accountNumber)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Please login and verify OTP.");
+        }
         return ResponseEntity.ok(transactionRepository.getMiniStatement(accountNumber));
     }
 

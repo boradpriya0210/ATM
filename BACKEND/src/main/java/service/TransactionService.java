@@ -4,8 +4,13 @@ import model.Transaction;
 import repository.TransactionRepository;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class TransactionService {
-    private final TransactionRepository transactionRepository = new TransactionRepository();
+    private final TransactionRepository transactionRepository;
 
     public void displayMiniStatement(String accountNumber) {
         List<Transaction> transactions = transactionRepository.getMiniStatement(accountNumber);

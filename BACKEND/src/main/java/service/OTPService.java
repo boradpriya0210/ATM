@@ -5,8 +5,13 @@ import repository.OTPRepository;
 import util.OTPGenerator;
 import java.sql.Timestamp;
 
+import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class OTPService {
-    private final OTPRepository otpRepository = new OTPRepository();
+    private final OTPRepository otpRepository;
     private int attempts = 0;
 
     public String generateAndSaveOTP(String accountNumber) {

@@ -1,23 +1,37 @@
+# Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+.metadata/
+bin/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.project
+.classpath
+.factorypath
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 # IDEs
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
-
-# Backend
-BACKEND/target/
-BACKEND/*.class
-BACKEND/*.log
-
-# Frontend
-FRONTEND/node_modules/
-FRONTEND/dist/
-FRONTEND/.env
-FRONTEND/.env.local
-FRONTEND/.env.development.local
-FRONTEND/.env.test.local
-FRONTEND/.env.production.local
-
-# OS files
-Thumbs.db
 .DS_Store
