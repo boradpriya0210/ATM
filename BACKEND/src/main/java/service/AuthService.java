@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
-    private final EmailService emailService;
     private final OTPService otpService;
 
     public User login(String accountNumber, String pin) {
@@ -43,21 +42,11 @@ public class AuthService {
     }
 
     public boolean initiateOTP(User user) {
-        String otp = otpService.generateAndSaveOTP(user.getAccountNumber());
-        System.out.println("DEBUG: Generated OTP [" + otp + "] for account: " + user.getAccountNumber());
-        
-        // Run email sending in a background thread
-        new Thread(() -> {
-            try {
-                emailService.sendOTPEmail(user.getEmail(), otp);
-            } catch (Exception e) {
-                System.err.println("CRITICAL ERROR: Failed to dispatch OTP email to " + user.getEmail());
-                e.printStackTrace();
-            }
-        }).start();
+        // No email is sent. The user may enter any 6-digit number as OTP.
+        otpService.generateAndSaveOTP(user.getAccountNumber());
+        System.out.println("INFO: OTP step initiated for account: " + user.getAccountNumber() + ". User may enter any 6-digit number.");
         return true;
     }
-
 
     public boolean verifyOTP(String accountNumber, String otp) {
         return otpService.validateOTP(accountNumber, otp);
@@ -76,3 +65,4 @@ public class AuthService {
         userRepository.clearData();
     }
 }
+

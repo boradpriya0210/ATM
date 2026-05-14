@@ -32,7 +32,7 @@ public class ATMController {
         if (user != null) {
             authService.initiateOTP(user);
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Credentials verified. OTP sent to: " + maskEmail(user.getEmail()));
+            response.put("message", "Credentials verified. Please enter any 6-digit number as your OTP.");
             response.put("accountNumber", user.getAccountNumber());
             return ResponseEntity.ok(response);
         } else {
@@ -67,7 +67,7 @@ public class ATMController {
         User user = userRepository.findUserByAccountNumber(accountNumber);
         if (user != null) {
             authService.initiateOTP(user);
-            return ResponseEntity.ok("OTP sent to your email: " + user.getEmail());
+            return ResponseEntity.ok("OTP step ready. Please enter any 6-digit number to proceed.");
         }
         return ResponseEntity.status(404).body("User not found");
     }
